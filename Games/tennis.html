@@ -10,12 +10,17 @@
 
 <script>
 var ballX = 75, ballY = 75;
-var ballSpeedX = 2, ballSpeedY = 2;
+var ballSpeedX = 4, ballSpeedY = 2;
 var canvas;
 var canvasContext;
+var paddle1Y = 250;
+var paddle2Y = 250;
+var player1Score = 0, player2Score = 0;
 
+const MAX_SCORE = 5;
 const PADDLE_WIDTH = 10;
 const PADDLE_HEIGHT = 100;
+const PADDLE_2_MOV = 6;
 
 window.onload = function() {
 	canvas = document.getElementById("gameCanvas");
@@ -26,27 +31,86 @@ window.onload = function() {
 		drawEverything();
 		moveEverything();
 	}, 1000/framesPerSecond);
+
+	canvas.addEventListener('mousemove', function(evt) {
+		var mousePos = calculateMousePos(evt);
+		paddle1Y = mousePos.y - (PADDLE_HEIGHT/2); //centers the mouse cursor
+	});
+}
+
+function calculateMousePos(evt) {
+	var rect = canvas.getBoundingClientRect(), root = document.documentElement;
+
+	//account fo the margins, canvas position on page, scroll amount, etc.
+	var mouseX = evt.clientX - rect.left - root.scrollLeft;
+	var mouseY = evt.clientY - rect.top - root.scrollTop;
+
+	return {
+		x: mouseX,
+		y: mouseY
+	};
+}
+
+function moveComputerPaddle() {
+	var paddleCenter = paddle2Y + PADDLE_HEIGHT/2;
+	if (ballY - 35 > paddleCenter) {
+		paddle2Y += PADDLE_2_MOV;
+	} else if (ballY + 35 < paddleCenter)  {
+		paddle2Y -= PADDLE_2_MOV;
+	}
 }
 
 function moveEverything() {
-if (ballX > canvas.width) {
-	ballSpeedX = -ballSpeedX;
-}
-
-if (ballX < 0) {
-	ballSpeedX = -ballSpeedX;
-}
-
-if (ballY > canvas.height) {
-	ballSpeedY = -ballSpeedY;
-}
-
-if (ballY < 0) {
-	ballSpeedY = -ballSpeedY;
-}
+	moveComputerPaddle();
 
 	ballX += ballSpeedX;
 	ballY += ballSpeedY;
+
+	if (ballX > canvas.width) {
+		if (ballY > paddle2Y && ballY < paddle2Y + PADDLE_HEIGHT) {
+			ballSpeedX = -ballSpeedX;
+			var deltaY = ballY - (paddle2Y+PADDLE_HEIGHT/2);
+			ballSpeedY = deltaY * 0.35;
+		} else {
+			player1Score++;
+			if (player1Score == MAX_SCORE) {
+				player1Score = 0;
+				player2Score = 0;
+			}
+			ballReset();
+		}
+	}
+
+	if (ballX < 0) {
+		if (ballY > paddle1Y && ballY < paddle1Y + PADDLE_HEIGHT) {
+			ballSpeedX = -ballSpeedX;
+			var deltaY = ballY - (paddle1Y+PADDLE_HEIGHT/2);
+			ballSpeedY = deltaY * 0.35;
+		} else {
+			player2Score++;
+			if (player2Score == MAX_SCORE) {
+				player1Score = 0;
+				player2Score = 0;
+			}
+			ballReset();
+		}
+	}
+
+	if (ballY > canvas.height) {
+		ballSpeedY = -ballSpeedY;
+	}
+
+	if (ballY < 0) {
+		ballSpeedY = -ballSpeedY;
+	}
+
+}
+
+function ballReset() {
+	ballSpeedX = -ballSpeedX;
+	ballSpeedY = 2;
+	ballX = canvas.width/2;
+	ballY = canvas.height/2;
 }
 
 function colorRect(startWidth, startHeight, endWidth, endHeight, color) {
@@ -61,6 +125,11 @@ function colorCircle(xPos, yPos, radius, startAngle, endAngle, clockwise, color)
 	canvasContext.fill();
 }
 
+function writeText(score, xPos, yPos, fontType) {
+	canvasContext.font = fontType;
+	canvasContext.fillText(score, xPos, yPos);
+}
+
 function drawEverything() {
 	//make the game view black
 	colorRect(0, 0, canvas.width, canvas.height, 'black');
@@ -69,7 +138,16 @@ function drawEverything() {
 	colorCircle(ballX, ballY, 10, 0, Math.PI*2, true, 'white');
 
 	//create the first paddle
-	colorRect(0, 250, PADDLE_WIDTH, PADDLE_HEIGHT, 'white');
+	colorRect(0, paddle1Y, PADDLE_WIDTH, PADDLE_HEIGHT, 'white');
+
+	//create second paddle
+	colorRect(canvas.width - PADDLE_WIDTH, paddle2Y, PADDLE_WIDTH, PADDLE_HEIGHT, 'white');
+
+	//player 1 score
+	writeText(player1Score, 100, 100, "30px Arial");
+
+	//player 2 score
+	writeText(player2Score, canvas.width - 130, 100, "30px Arial");
 }
 </script>
 
