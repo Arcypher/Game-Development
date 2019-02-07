@@ -9,18 +9,27 @@
 <canvas id="gameCanvas" width="800" height="600"></canvas>
 
 <script>
-var ballX = 75, ballY = 75;
-var ballSpeedX = 4, ballSpeedY = 2;
+var ballX = 400, ballY = 300;
+var ballSpeedX = 4, ballSpeedY = 6;
 var canvas;
 var canvasContext;
 var paddle1Y = 250;
 var paddle2Y = 250;
 var player1Score = 0, player2Score = 0;
+var showWinningScreen = false;
 
 const MAX_SCORE = 5;
 const PADDLE_WIDTH = 10;
 const PADDLE_HEIGHT = 100;
 const PADDLE_2_MOV = 6;
+
+function handleMouseClick() {
+	if (showWinningScreen) {
+		player1Score = 0;
+		player2Score = 0;
+		showWinningScreen = false;
+	}
+}
 
 window.onload = function() {
 	canvas = document.getElementById("gameCanvas");
@@ -31,6 +40,8 @@ window.onload = function() {
 		drawEverything();
 		moveEverything();
 	}, 1000/framesPerSecond);
+
+	canvas.addEventListener('mousedown', handleMouseClick);
 
 	canvas.addEventListener('mousemove', function(evt) {
 		var mousePos = calculateMousePos(evt);
@@ -73,10 +84,6 @@ function moveEverything() {
 			ballSpeedY = deltaY * 0.35;
 		} else {
 			player1Score++;
-			if (player1Score == MAX_SCORE) {
-				player1Score = 0;
-				player2Score = 0;
-			}
 			ballReset();
 		}
 	}
@@ -88,10 +95,6 @@ function moveEverything() {
 			ballSpeedY = deltaY * 0.35;
 		} else {
 			player2Score++;
-			if (player2Score == MAX_SCORE) {
-				player1Score = 0;
-				player2Score = 0;
-			}
 			ballReset();
 		}
 	}
@@ -107,6 +110,9 @@ function moveEverything() {
 }
 
 function ballReset() {
+	if (player1Score >= MAX_SCORE || player2Score >= MAX_SCORE) {
+		showWinningScreen = true;
+	}
 	ballSpeedX = -ballSpeedX;
 	ballSpeedY = 2;
 	ballX = canvas.width/2;
@@ -125,15 +131,32 @@ function colorCircle(xPos, yPos, radius, startAngle, endAngle, clockwise, color)
 	canvasContext.fill();
 }
 
-function writeText(score, xPos, yPos, fontType) {
+function drawNet() {
+	for (var i = 0; i <= canvas.height; i+=40) {
+		colorRect(canvas.width/2, i, 2, 20, 'white');
+	}
+}
+
+function writeText(text, xPos, yPos, fontType, color) {
+	canvasContext.fillStyle = color;
 	canvasContext.font = fontType;
-	canvasContext.fillText(score, xPos, yPos);
+	canvasContext.fillText(text, xPos, yPos);
 }
 
 function drawEverything() {
+
 	//make the game view black
 	colorRect(0, 0, canvas.width, canvas.height, 'black');
 
+	if (showWinningScreen) {
+		if (player1Score >= MAX_SCORE) {
+			writeText("Left side won!", canvas.width/2 - 50, canvas.height/2 - 100, "10px Arial", 'white');
+		} else if (player2Score >= MAX_SCORE) {
+			writeText("Right side won!", canvas.width/2 - 50, canvas.height/2 - 100, "10px Arial", 'white');
+		}
+		writeText("Click to continue", canvas.width/2 - 50, canvas.height/2, "10px Arial", 'white');
+		return;
+	}
 	//create the ball
 	colorCircle(ballX, ballY, 10, 0, Math.PI*2, true, 'white');
 
@@ -143,11 +166,13 @@ function drawEverything() {
 	//create second paddle
 	colorRect(canvas.width - PADDLE_WIDTH, paddle2Y, PADDLE_WIDTH, PADDLE_HEIGHT, 'white');
 
+	drawNet();
+
 	//player 1 score
-	writeText(player1Score, 100, 100, "30px Arial");
+	writeText(player1Score, 100, 100, "30px Arial", 'white');
 
 	//player 2 score
-	writeText(player2Score, canvas.width - 130, 100, "30px Arial");
+	writeText(player2Score, canvas.width - 130, 100, "30px Arial", 'white');
 }
 </script>
 
