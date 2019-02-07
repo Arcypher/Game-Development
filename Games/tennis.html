@@ -11,6 +11,7 @@
 <script>
 var ballX = 400, ballY = 300;
 var ballSpeedX = 4, ballSpeedY = 6;
+var ballSpeedXTemp = ballSpeedX;
 var canvas;
 var canvasContext;
 var paddle1Y = 250;
@@ -114,7 +115,7 @@ function ballReset() {
 		showWinningScreen = true;
 	}
 	ballSpeedX = -ballSpeedX;
-	ballSpeedY = 2;
+	ballSpeedY = ballSpeedXTemp;
 	ballX = canvas.width/2;
 	ballY = canvas.height/2;
 }
